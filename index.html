@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>南應學生會｜特約商店地圖</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <main class="app">
+    <div id="map"></div>
+
+    <section class="topbar">
+      <div class="search-card">
+        <button class="brand-mark" id="homeBtn" title="回到主畫面">
+          <img src="assets/topcis.png" alt="學生會 CIS" onerror="this.style.display='none';this.parentElement.textContent='B'">
+        </button>
+        <div class="search-main">
+          <div class="search-label">BEE BENEFIT MAP</div>
+          <input id="searchInput" type="text" placeholder="搜尋特約商店..." />
+        </div>
+        <button class="menu-btn" id="clearBtn">×</button>
+      </div>
+      <div class="dropdown" id="searchDropdown"></div>
+      <div class="filter-row" id="filterRow">
+        <button class="pill active" data-category="全部">全部</button>
+        <button class="pill" data-category="食"><span class="pill-icon" data-icon="食"></span>食</button>
+        <button class="pill" data-category="衣"><span class="pill-icon" data-icon="衣"></span>衣</button>
+        <button class="pill" data-category="住"><span class="pill-icon" data-icon="住"></span>住</button>
+        <button class="pill" data-category="行"><span class="pill-icon" data-icon="行"></span>行</button>
+        <button class="pill" data-category="育"><span class="pill-icon" data-icon="育"></span>育</button>
+        <button class="pill" data-category="樂"><span class="pill-icon" data-icon="樂"></span>樂</button>
+      </div>
+    </section>
+
+    <section class="map-controls" id="mapControls">
+      <button class="ctrl locate-btn" id="locateBtn" aria-label="定位"><span class="locate-icon"></span></button>
+      <button class="ctrl zoom-btn" id="zoomInBtn" aria-label="放大"><span class="plus-icon"></span></button>
+      <button class="ctrl zoom-btn" id="zoomOutBtn" aria-label="縮小"><span class="minus-icon"></span></button>
+      <button class="ctrl layer-btn" id="layerToggleBtn" aria-label="切換圖層"><span class="layer-icon"></span></button>
+    </section>
+
+    <section class="bottom-sheet" id="bottomSheet">
+      <button class="handle-wrap" id="sheetToggle"><span class="handle"></span></button>
+      <div class="sheet-header"><div><h2>附近特約商店</h2><span id="storeCount">讀取中</span></div></div>
+      <div id="storeList" class="store-list"></div>
+    </section>
+
+    <footer class="footer-cis"><div class="footer-cis-inner"><img src="assets/tailcis.png" alt="學生會 CIS" onerror="this.style.display='none'"><span>© 第二十四屆學生會</span></div></footer>
+
+    <section id="detailOverlay" class="detail-overlay">
+      <article class="store-detail">
+        <div class="detail-top-actions"><button class="detail-fav" id="detailFavBtn" onclick="toggleFavorite(activeStore.id)">♥</button><button class="detail-close" id="closeDetailBtn">×</button></div>
+        <div class="detail-cover"><div id="galleryTrack" class="gallery-track"></div></div>
+        <div class="detail-body">
+          <div class="detail-title-row"><img id="detailThumb" class="detail-thumb" alt="店家小圖"><div><h2 id="detailName">店家名稱</h2><div class="detail-sub"><span id="detailDistance">距離</span> · <span id="detailCategory">分類</span> · <span id="detailOpen">營業中</span></div></div></div>
+          <div class="detail-quick"><button class="quick-btn primary" id="systemNavBtn">導航</button><button class="quick-btn" onclick="scrollToSection('reviewSection')">查看評價</button></div>
+          <section class="section"><h3>特約內容</h3><p id="detailDiscount"></p></section>
+          <section class="section"><h3>店家介紹</h3><p id="detailIntro"></p></section>
+          <section class="section" id="gallerySection"><h3>店家照片</h3><div id="photoGrid" class="photo-grid"></div></section>
+          <section class="section"><h3>其他介紹</h3><p id="detailExtra"></p><div id="extraPhotos" class="photo-grid" style="margin-top:10px"></div></section>
+          <section class="section" id="reviewSection"><h3>目前評價</h3><div class="rating-box"><div><div class="score" id="avgScore">0.0 / 10</div><div class="stars" id="avgStars">★★★★★</div></div><div id="reviewCount" class="detail-sub">0 則評價</div></div><div id="reviewList"></div></section>
+          <section class="section"><h3>新增評價</h3><div class="review-form"><div class="rating-control"><div class="star-drag" id="starDrag"><div class="star-bg">★★★★★</div><div class="star-fill" id="starFill">★★★★★</div></div><input id="ratingNumber" class="rating-number" type="number" min="0" max="10" step="0.1" value="10"></div><textarea id="reviewText" placeholder="留下你的使用心得，送出後會交由後台審核。"></textarea><input id="reviewPhotoFile" type="file" accept="image/*"><div id="uploadPreview" class="upload-preview"><img id="uploadPreviewImg" alt="上傳預覽"><span>已選擇 1 張圖片</span></div><button class="submit-review" id="submitReviewBtn">送出評價</button></div></section>
+        </div>
+      </article>
+    </section>
+
+    <section id="imageViewer" class="image-viewer"><button class="viewer-close" id="viewerClose">×</button><button class="viewer-nav viewer-prev" id="viewerPrev">‹</button><button class="viewer-nav viewer-next" id="viewerNext">›</button><img id="viewerImg" alt="店家照片"></section>
+
+    <section id="loading" class="loading"><div class="loading-card"><div style="display:grid;justify-items:center;gap:10px"><img src="assets/tailcis.png" alt="學生會 CIS" style="width:180px;max-width:82%;height:auto;object-fit:contain;opacity:.96" onerror="this.style.display='none'"><div class="line-icon" id="lineIcon"></div></div><b>正在進入特約商店系統</b><p>正在載入中<span class="loading-dots"><span>.</span><span>.</span><span>.</span></span></p></div></section>
+  </main>
+  <div id="toast" class="toast"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
